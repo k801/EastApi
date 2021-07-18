@@ -33,8 +33,19 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 // Route::post('skillhub/register',[ApiAuthController::class,'register']);
-Route::get('items',[ApiExamController::class,'index']);
+Route::get('items',[ApiExamController::class,'index'])->middleware('IsLogin');
 
 Route::get('category',[ApiExamController::class,'category']);
 
 
+Route::get('register_form',[ApiExamController::class,'register_form']);
+
+
+Route::post('register',[ApiExamController::class,'register']);
+
+Route::get('logout/{id}',[ApiExamController::class,'logout']);
+
+Route::post('login',[ApiExamController::class,'login']);
+
+
+Route::get('user_product/{id}',[ApiExamController::class,'get_products']);

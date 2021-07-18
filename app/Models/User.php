@@ -24,6 +24,7 @@ class User extends Authenticatable
         'access_token',
         ''
     ];
+    public $timestamps = false;
 
     /**
      * The attributes that should be hidden for arrays.
