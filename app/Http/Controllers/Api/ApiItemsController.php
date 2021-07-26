@@ -398,7 +398,25 @@ public function register_form()
 public function register(Request $request)
 
 {
- if ($request->emai='')
+    if(Webuser::where('user', '=',$request->user)->count()>0)
+    {
+
+        return Response::json('Please enter unique user',406);
+
+    }
+    elseif(Webuser::where('mobile', '=',$request->mobile)->count()>0)
+    {
+
+        return Response::json('Please enter unique mobile',407);
+
+    }
+
+elseif(Webuser::where('email', '=',$request->email)->count()>0)
+{
+
+    return Response::json('Please enter unique email',408);
+
+}elseif ($request->emai='')
      {
 
         return Response::json('Please enter  email',405);
