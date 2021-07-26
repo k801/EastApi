@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ApiAuthController;
-use App\Http\Controllers\Api\ApiExamController;
+use App\Http\Controllers\Api\ApiItemsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -33,19 +33,19 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 // Route::post('skillhub/register',[ApiAuthController::class,'register']);
-Route::get('items',[ApiExamController::class,'index'])->middleware('IsLogin');
+Route::get('items',[ApiItemsController::class,'index'])->middleware('IsLogin');
 
-Route::get('category',[ApiExamController::class,'category']);
-
-
-Route::get('register_form',[ApiExamController::class,'register_form']);
+Route::get('category',[ApiItemsController::class,'category']);
 
 
-Route::post('register',[ApiExamController::class,'register']);
-
-Route::get('logout/{id}',[ApiExamController::class,'logout']);
-
-Route::post('login',[ApiExamController::class,'login']);
+Route::get('register_form',[ApiItemsController::class,'register_form']);
 
 
-Route::get('user_product/{id}',[ApiExamController::class,'get_products']);
+Route::post('register',[ApiItemsController::class,'register']);
+
+Route::get('logout/{id}',[ApiItemsController::class,'logout']);
+
+Route::post('login',[ApiItemsController::class,'login']);
+
+
+Route::get('user_product/{id}',[ApiItemsController::class,'get_products']);
