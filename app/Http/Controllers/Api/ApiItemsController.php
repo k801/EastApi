@@ -121,20 +121,24 @@ class ApiItemsController extends Controller
 // return Response::json($data);
 
 // all items
-$itemss=DB::table('items')->get();
+$offers=DB::table('items')->where('type',2)->get();
 // return $itemss;
-$items=array();
-foreach($itemss as $item)
+$new_offers=array();
+foreach($offers as $offer)
 {
 
 
-$items[]=([
-                         "id"=>$item->id,
+$new_offers[]=([
+    "id"=>$offer->id,
 
-                        "name_en"=>$item->name,
-                        "name_ar"=>$item->name_ar,
-                        'old_price'=>$item->old_price,
-                        'price'=>$item->price
+    "name_en"=>$offer->name,
+    "name_ar"=>$offer->name_ar,
+
+
+
+    "old_price"=>$offer->old_price,
+    "price"=>$offer->price,
+
 
 
 ]);
@@ -147,11 +151,11 @@ $items[]=([
 }
 
 
-// $data['items']=$items;
+$data['hot_offers']=$new_offers;
 
 
 
-
+// dd($new_offers);
 
 
 
@@ -376,7 +380,7 @@ public function register_form()
 
                 $regions[]=[
                      'id'=>$zone->id,
-                     'city id'=>$zone->c_id,
+                     'city_id'=>$zone->c_id,
                       'name_en'=>$zone->name,
                       'name_ar'=>$zone->name_ar,
                       'price'=>$zone->price
@@ -386,8 +390,8 @@ public function register_form()
                 ];
 
       }
-      $data['cities_names']=$gov;
-      $data['zones_names']=$regions;
+      $data['cities']=$gov;
+      $data['zones']=$regions;
       return response::json($data);
 
 
@@ -539,12 +543,6 @@ return response::json($data);
 
 public function login( Request $request)
 {
-
-
-
-
-
-
 // if(Webuser::where('user', '=',$request->user)->count()<0)
 //     {
 
@@ -594,33 +592,43 @@ public function login( Request $request)
 // dd($request->all());
 
 
+if($request->has('user'))
+{
+   if(Webuser::where('user', '=',$request->user)->count()==0)
+      {
+        return Response::json('Please enter valid user',408);
+    }
 
 
-if($request->email='')
+
+}
+
+if($request->email==''&&$request->user==null)
      {
 
-        return Response::json('Please enter  email',405);
+        return Response::json('Please enter  user or email',405);
 
-}elseif($request->pass='')
+}elseif($request->pass==''|$request->pass==null)
 {
 
-   return Response::json('Please enter password',406);
+   return Response::json('Please enter password',405);
 
 }else{
 
 
 
-    $user=Webuser::where('email',$request->email)->first();
-
+    $user=Webuser::where('email',$request->email)->orWhere('user','=', $request->user)->first();
     if($user!=null)
     {
+        // dd($user);
 
-            $islogin=Hash::check($request->pass,$user->pass);
+        $islogin=Hash::check($request->pass,$user->pass);
+        // dd($islogin);
               if($islogin)
              {
 
-                 $user=Webuser::select("id","name","l_name","user","email","mobile","city","zone","address")->where('email',$request->email)->first();
-
+                 $user=Webuser::select("id","name","l_name","user","email","mobile","city","zone","address")->where('email',$request->email)->orWhere('user','=', $request->user)->first();
+// dd($user);
               $user->update([
                       'token'=>Str::random(64)
 
@@ -633,13 +641,13 @@ if($request->email='')
 
               }else{
 
-                 $data['msg']="wrong password";
-                //  return Response::json('Please enter valid password',105);
+                //  $data['msg']="wrong password";
+                 return Response::json('Please enter valid password',407);
 
      }
 
     }else{
-     return Response::json('Please enter valid Email',106);
+     return Response::json('Please enter valid Email',406);
  }
 
 
