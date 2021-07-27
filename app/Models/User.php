@@ -22,7 +22,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'access_token',
-        ''
+        'mobile'
     ];
     public $timestamps = false;
 

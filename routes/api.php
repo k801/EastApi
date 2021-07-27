@@ -49,3 +49,8 @@ Route::post('login',[ApiItemsController::class,'login']);
 
 
 Route::get('user_product/{id}',[ApiItemsController::class,'get_products']);
+
+
+// product details
+Route::get('product_details/{id}',[ApiItemsController::class,'Product_details']);
+

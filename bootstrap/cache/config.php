@@ -473,11 +473,11 @@
       'smtp' => 
       array (
         'transport' => 'smtp',
-        'host' => 'mailhog',
-        'port' => '1025',
-        'encryption' => NULL,
-        'username' => NULL,
-        'password' => NULL,
+        'host' => 'smtp.mailtrap.io',
+        'port' => '587',
+        'encryption' => 'tls',
+        'username' => '1eedf720d16f8f',
+        'password' => '66994ddf9ff9d8',
         'timeout' => NULL,
         'auth_mode' => NULL,
       ),

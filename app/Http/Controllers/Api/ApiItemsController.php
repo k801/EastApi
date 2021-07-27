@@ -27,7 +27,40 @@ use Illuminate\Support\Str;
 class ApiItemsController extends Controller
 {
 
+         public function Product_details($id)
+         {
 
+            $product= DB::table('items')->where('id',$id)->first();
+            $product_imgs= DB::table('img_key')->where('img_key',$product->img_key)->get();
+            $imgs=array();
+                           foreach ($product_imgs as $product_img) {
+
+                                       $imgs[]=$product_img->img;
+
+
+
+                                             }
+
+
+
+         $data=([
+
+                                              'name_en'=>$product->name,
+                                              'name_ar'=>$product->name_ar,
+                                              "category_id"=>$product->category,
+                                              "subcategory_id"=>$product->scategory,
+                                              "description_en"=>strip_tags($product->des),
+                                              "description_ar"=>strip_tags($product->des_ar),
+                                              "old_price"=>$product->old_price,
+                                              "price"=>$product->price,
+                                              'imgs'=> $imgs
+
+
+
+                                        ]);
+         return Response::json($data);
+
+         }
     // public function get_products($id)
     // {
 
@@ -588,13 +621,21 @@ public function login( Request $request)
 
                     // ] );
 
-
-// dd($request->all());
+// $c=$request->all()["email"];
+// dd(count($c));
 
 
 if($request->has('user'))
 {
-   if(Webuser::where('user', '=',$request->user)->count()==0)
+
+    if($request->user==null)
+    {
+
+        return Response::json('Please enter  user',405);
+
+
+    }
+    elseif(Webuser::where('user', '=',$request->user)->count()==0)
       {
         return Response::json('Please enter valid user',408);
     }
@@ -603,7 +644,7 @@ if($request->has('user'))
 
 }
 
-if($request->email==''&&$request->user==null)
+if($request->email=='' &&$request->user=='')
      {
 
         return Response::json('Please enter  user or email',405);
