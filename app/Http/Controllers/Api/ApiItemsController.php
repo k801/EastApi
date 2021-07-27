@@ -33,41 +33,70 @@ class ApiItemsController extends Controller
 
 public function search_items(Request $request)
 {
-
     $brand=$request->brand;
     $price=$request->price;
-    $subcategory=$request->subcategory;
-    $price_from=$request->price_from;
+    $scategory=$request->scategory;
     $price_to=$request->price_to;
+
+
     // dd($request->all());
-   $products=DB::table('items')->when(array($price_from,$price_from),function ($q) use ($price_from,$price_to) {
+    if($request->has('price_from')){
+
+        $price_from=$request->price_from;
+    }else{
+        $price_from=0;
+
+    }
+    if($request->has('price_to')){
+
+        $price_to=$request->price_to;
+
+
+    }else{
+
+        $price_to=1000000;
+    }
+
+
+dd($brand);
+
+
+
+   $products=DB::table('items')
+    ->when($scategory, function ($q) use ($scategory) {
+        return $q->where('scategory',$scategory);
+    })
+    ->when($brand, function ($q) use ($brand) {
+        return $q->where('brand',$brand);
+    })
+    ->when(array($price_from,$price_from),function ($q) use ($price_from,$price_to) {
         return $q->whereBetween('price',array($price_from,$price_to));
     })
 
-    ->when($subcategory, function ($q) use ($subcategory) {
-        return $q->where('category', $subcategory);
-    })
-    ->when($brand, function ($q) use ($brand) {
-        return $q->where('brand', $brand);
-    })
     ->get();
+
+
+// dd($products);
+
+
+    $res=array();
 
     foreach ($products as $product)
 
     {
-        $imgs=array();
+
+                                $imgs=array();
+                                        $product_imgs= DB::table('img_key')->where('img_key',$product->img_key)->get();
+
+                                                     foreach ($product_imgs as $product_img) {
+
+                                                               $imgs[]='https://eastasiaeg.com/front/images/items/'.$product_img->img;
+
+                                                          }
 
 
 
-         $product_imgs= DB::table('img_key')->where('img_key',$product->img_key)->get();
-                       foreach ($product_imgs as $product_img) {
-
-                                   $imgs[]='https://eastasiaeg.com/front/images/items/'.$product_img->img;
-
-                                }
-
-
-                                $data[]=([
+                                                          $res[]=([
 
                                     'name_en'=>$product->name,
                                     'name_ar'=>$product->name_ar,
@@ -84,53 +113,16 @@ public function search_items(Request $request)
                                     "short_ar"=>strip_tags($product->short_ar),
                                     'stock'=>$product->stock,
                                     'imgs'=> $imgs,
+                                                                        ]);
+
+                }
 
 
-                              ]);
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
+     $data=count($res);
 
 return Response::json($data);
 
-
-
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
          public function Product_details($id)
          {
