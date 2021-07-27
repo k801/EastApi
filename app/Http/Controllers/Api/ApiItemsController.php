@@ -27,6 +27,111 @@ use Illuminate\Support\Str;
 class ApiItemsController extends Controller
 {
 
+
+
+
+
+public function search_items(Request $request)
+{
+
+    $brand=$request->brand;
+    $price=$request->price;
+    $subcategory=$request->subcategory;
+    $price_from=$request->price_from;
+    $price_to=$request->price_to;
+    // dd($request->all());
+   $products=DB::table('items')->when(array($price_from,$price_from),function ($q) use ($price_from,$price_to) {
+        return $q->whereBetween('price',array($price_from,$price_to));
+    })
+
+    ->when($subcategory, function ($q) use ($subcategory) {
+        return $q->where('category', $subcategory);
+    })
+    ->when($brand, function ($q) use ($brand) {
+        return $q->where('brand', $brand);
+    })
+    ->get();
+
+    foreach ($products as $product)
+
+    {
+        $imgs=array();
+
+
+
+         $product_imgs= DB::table('img_key')->where('img_key',$product->img_key)->get();
+                       foreach ($product_imgs as $product_img) {
+
+                                   $imgs[]='https://eastasiaeg.com/front/images/items/'.$product_img->img;
+
+                                }
+
+
+                                $data[]=([
+
+                                    'name_en'=>$product->name,
+                                    'name_ar'=>$product->name_ar,
+                                    "category_id"=>$product->category,
+                                    "subcategory_id"=>$product->scategory,
+                                    "brand_id"=>$product->brand,
+                                    "description_en"=>strip_tags($product->des),
+                                    "description_ar"=>strip_tags($product->des_ar),
+                                    "old_price"=>$product->old_price,
+                                    "price"=>$product->price,
+                                    "model_en"=>$product->model,
+                                    "model_ar"=>$product->model_ar,
+                                    "short_en"=>strip_tags($product->short),
+                                    "short_ar"=>strip_tags($product->short_ar),
+                                    'stock'=>$product->stock,
+                                    'imgs'=> $imgs,
+
+
+                              ]);
+
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+return Response::json($data);
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
          public function Product_details($id)
          {
 
@@ -35,7 +140,7 @@ class ApiItemsController extends Controller
             $imgs=array();
                            foreach ($product_imgs as $product_img) {
 
-                                       $imgs[]=$product_img->img;
+                                       $imgs[]='https://eastasiaeg.com/front/images/items/'.$product_img->img;
 
 
 
@@ -49,12 +154,17 @@ class ApiItemsController extends Controller
                                               'name_ar'=>$product->name_ar,
                                               "category_id"=>$product->category,
                                               "subcategory_id"=>$product->scategory,
+                                              "brand_id"=>$product->brand,
                                               "description_en"=>strip_tags($product->des),
                                               "description_ar"=>strip_tags($product->des_ar),
                                               "old_price"=>$product->old_price,
                                               "price"=>$product->price,
-                                              'imgs'=> $imgs
-
+                                              "model_en"=>$product->model,
+                                              "model_ar"=>$product->model_ar,
+                                              "short_en"=>strip_tags($product->short),
+                                              "short_ar"=>strip_tags($product->short_ar),
+                                              'stock'=>$product->stock,
+                                              'imgs'=> $imgs,
 
 
                                         ]);

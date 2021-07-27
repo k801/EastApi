@@ -54,3 +54,7 @@ Route::get('user_product/{id}',[ApiItemsController::class,'get_products']);
 // product details
 Route::get('product_details/{id}',[ApiItemsController::class,'Product_details']);
 
+
+// search api
+
+Route::post('search_items',[ApiItemsController::class,'search_items']);
