@@ -33,50 +33,51 @@ class ApiItemsController extends Controller
 
 public function search_items(Request $request)
 {
+
     $brand=$request->brand;
-    $price=$request->price;
     $scategory=$request->scategory;
+    $category=$request->category;
+
+    if(isset($scategory)){
+
+    $scategory =  explode(',', $request->scategory);
+
+    }
+    if(isset($category)){
+
+        $category =  explode(',', $request->category);
+
+        }
+
+    if(isset($brand)){
+
+        $brand =  explode(',', $request->brand);
+
+        }
+
+
     $price_to=$request->price_to;
+    $price_from=$request->price_from;
 
 
-    // dd($request->all());
-    if($request->has('price_from')){
+$products=DB::table('items')->where(function($query) use ($scategory,$category, $brand,$price_to,$price_from)
+    {
+        if($category)
+        $query->whereIn('category', $category);
 
-        $price_from=$request->price_from;
-    }else{
-        $price_from=0;
+        if($scategory)
+            $query->whereIn('scategory', $scategory);
+
+        if($brand)
+            $query->whereIn('brand', $brand);
+
+        if($price_to&&$price_from)
+            $query->whereBetween('price',array($price_from,$price_to));
+
 
     }
-    if($request->has('price_to')){
+)->get();
 
-        $price_to=$request->price_to;
-
-
-    }else{
-
-        $price_to=1000000;
-    }
-
-
-dd($brand);
-
-
-
-   $products=DB::table('items')
-    ->when($scategory, function ($q) use ($scategory) {
-        return $q->where('scategory',$scategory);
-    })
-    ->when($brand, function ($q) use ($brand) {
-        return $q->where('brand',$brand);
-    })
-    ->when(array($price_from,$price_from),function ($q) use ($price_from,$price_to) {
-        return $q->whereBetween('price',array($price_from,$price_to));
-    })
-
-    ->get();
-
-
-// dd($products);
 
 
     $res=array();
@@ -85,40 +86,32 @@ dd($brand);
 
     {
 
-                                $imgs=array();
-                                        $product_imgs= DB::table('img_key')->where('img_key',$product->img_key)->get();
+                                        $product_img= DB::table('img_key')->where('img_key',$product->img_key)->first();
 
-                                                     foreach ($product_imgs as $product_img) {
 
-                                                               $imgs[]='https://eastasiaeg.com/front/images/items/'.$product_img->img;
+                                        $product_img= 'https://eastasiaeg.com/front/images/items/'.$product_img->img;
 
-                                                          }
 
 
 
                                                           $res[]=([
 
-                                    'name_en'=>$product->name,
-                                    'name_ar'=>$product->name_ar,
-                                    "category_id"=>$product->category,
-                                    "subcategory_id"=>$product->scategory,
-                                    "brand_id"=>$product->brand,
-                                    "description_en"=>strip_tags($product->des),
-                                    "description_ar"=>strip_tags($product->des_ar),
-                                    "old_price"=>$product->old_price,
-                                    "price"=>$product->price,
-                                    "model_en"=>$product->model,
-                                    "model_ar"=>$product->model_ar,
-                                    "short_en"=>strip_tags($product->short),
-                                    "short_ar"=>strip_tags($product->short_ar),
-                                    'stock'=>$product->stock,
-                                    'imgs'=> $imgs,
+                                                            "id"=>$product->id,
+
+                                                            "name_en"=>$product->name,
+                                                            "name_ar"=>$product->name_ar,
+
+
+
+                                                            "old_price"=>$product->old_price,
+                                                            "price"=>$product->price,
+                                                                "img"=>$product_img
                                                                         ]);
 
                 }
 
 
-     $data=count($res);
+     $data=$res;
 
 return Response::json($data);
 
@@ -160,9 +153,48 @@ return Response::json($data);
 
 
                                         ]);
-         return Response::json($data);
+        //  return Response::json($data);
 
          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // public function get_products($id)
     // {
 
@@ -228,15 +260,16 @@ return Response::json($data);
     public function index()
     {
 
-// sliders imags
+
+
+
+
+// /////////////////////////sliders
+
         $sliderss=DB::table('slider_img')->get();
 
         foreach($sliderss as $slider)
                      {
-
-
-
-
                         $sliders[]=([
 
                               'id'=> $slider->id,
@@ -253,65 +286,45 @@ return Response::json($data);
                      $data['sliders']=$sliders;
 
 
-// return Response::json($data);
-
-// all items
-$offers=DB::table('items')->where('type',2)->get();
-// return $itemss;
-$new_offers=array();
-foreach($offers as $offer)
-{
-
-
-$new_offers[]=([
-    "id"=>$offer->id,
-
-    "name_en"=>$offer->name,
-    "name_ar"=>$offer->name_ar,
-
-
-
-    "old_price"=>$offer->old_price,
-    "price"=>$offer->price,
-
-
-
-]);
-
-
-
-
-
-
-}
-
-
-$data['hot_offers']=$new_offers;
-
-
-
-// dd($new_offers);
-
-
-
+// ////////////////////////////////////////////////////////////////////////
 // new arrival
-$itemss=DB::table('items')->orderby('id','desc')->take(50)->get();
+$new_arrivalss=DB::table('items')->orderby('id','desc')->take(50)->get();
 
-                     foreach($itemss as $item)
+
+
+                     foreach($new_arrivalss as $new_arrival)
                      {
 
+                        $new_arrivals_img=DB::table('img_key')->where('img_key',$new_arrival->img_key)->first();
 
-                     $new[]=([
-                        "id"=>$item->id,
+                     $arrivals[]=([
+                        "id"=>$new_arrival->id,
+                        "name_en"=>strip_tags($new_arrival->name),
+                        "name_ar"=>strip_tags($new_arrival->name_ar),
+                        "old_price"=>$new_arrival->old_price,
+                        "price"=>$new_arrival->price,
+                        "img"=>'https://eastasiaeg.com/front/images/items/'.$new_arrivals_img->img
 
-                        "name_en"=>$item->name,
-                        "name_ar"=>$item->name_ar,
+                  ]);
 
+                }
 
+$data['new_arrivals']=$arrivals ;
+//////////////////////////////////////////////// new offers
 
-                        "old_price"=>$item->old_price,
-                        "price"=>$item->price,
+                     $offerss=Item::orderby('id','desc')->take(50)->get();
+                     foreach($offerss as $offer)
+                     {
 
+                        $offer_img=DB::table('img_key')->where('img_key',$offer->img_key)->first();
+
+                     $new_offers[]=([
+                        // "id"=>$offers->id,
+                        "name_en"=>$offer->name,
+                        "name_ar"=>$offer->name_ar,
+                        "old_price"=>$offer->old_price,
+                        "price"=>$offer->price,
+                        "img"=>'https://eastasiaeg.com/front/images/items/'.$offer_img->img
 
                   ]);
 
@@ -320,46 +333,9 @@ $itemss=DB::table('items')->orderby('id','desc')->take(50)->get();
 
                 }
 
-$data['new_arrival']=$new ;
+                $data['new_offers']=$new_offers ;
 
-                    //  $data['offers']=Item::orderby('id','desc')->take(50)->get();
-                    // $items=DB::table('items')->select('id','name','name_ar','c_price','img_key','category','scategory')->get();
-                    //  foreach($items as $item)
-                    //                        {
-                    //                         $images=array();
-
-                    //                         $imgs=DB::table('img_key')->where('img_key',$item->img_key )->get();
-
-                    //                                        foreach ($imgs as $img) {
-
-                    //                                                            $images[]=$img->img;
-
-                    //                                                         }
-
-                    //                                 $data[]=([
-
-                    //                                   'img'=>$images,
-                    //                                  "category"=>$item->category,
-                    //                                   "scategory"=>$item->scategory,
-                    //                                 //   "brand"=>$item->brand,
-                    //                                   "name"=>$item->name,
-                    //                                   "name_ar"=>$item->name_ar,
-                    //                                   "price"=>$item->price,
-
-
-
-                    //                             ]);
-
-
-
-
-
-
-
-
-
-                    //                             }
-
+/////////////////////////////categories
 
                                                 $categoriess=DB::table('category')->get();
                                                 $scats=array();
@@ -380,6 +356,9 @@ $data['new_arrival']=$new ;
 
                                                        }
 
+                                                       //////////////////////subcategories
+
+
                                                         $subcategoriess=DB::table('subcategory')->get();
                                                                        foreach ($subcategoriess as $subcategory) {
 
@@ -390,7 +369,6 @@ $data['new_arrival']=$new ;
                                                                                                     'name_en'=>$subcategory->name,
                                                                                                     'name_ar'=>$subcategory->name_ar,
                                                                                                     'img'=>$subcategory->image,
-                                                                                                    // 'icon'=>$subcategory->icon,
 
 
 
@@ -398,36 +376,24 @@ $data['new_arrival']=$new ;
                                                                                               ]);
 
                                                                                  }
-                                                                                //  $data['subcatsgories']=$subcats;
-
-
-                                                                                                //                $data[]=([
-
-                                                                                                //    'id'=>$categorie->id,
-
-                                                                                                //     'name_en'=>$categorie->name,
-                                                                                                //     'name_ar'=>$categorie->name_ar,
-                                                                                                //     'icon'=>$categorie->name,
-                                                                                                //     'image'=>$categorie->name,
-                                                                                                //     'url'=>$categorie->name,
-                                                                                                //     'subcategoies'=>$subcateories,
-
-
-
-                                                                                                //                ]);
-
-                                                    //  }
                                                     $my_array1 = $subcats;
                                                     $my_array2 = $cats;
                                                     $data['categories'] = array_merge($my_array2, $my_array1);
+
+
+
+
                                                     return  Response::json($data);
 
 
 
 
 
+// end of function index
 
 }
+
+
 
 
 
