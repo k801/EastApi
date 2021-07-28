@@ -58,3 +58,6 @@ Route::get('product_details/{id}',[ApiItemsController::class,'Product_details'])
 // search api
 
 Route::post('search_items',[ApiItemsController::class,'search_items']);
+
+
+Route::post('add_order',[ApiItemsController::class,'add_order']);

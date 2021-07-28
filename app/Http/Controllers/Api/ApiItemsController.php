@@ -28,7 +28,98 @@ class ApiItemsController extends Controller
 {
 
 
+public function add_order(Request $request)
+{
+    // dd($request->all()["client_id"]);
 
+$array = $request->all();
+$client_id=$array["data"][0]["client_id"];
+$order_id=$array["data"][0]["order_id"];
+
+$client=DB::table("web_users")->where("id",$client_id)->first();
+
+$order_id = mt_rand(10000,100000);
+
+$client_id=DB::table("order_items")->select('order_id')->where('order_id',$order_id)->count();
+
+
+if($client_id!==0)
+{
+    $order_id = mt_rand(10000,100000);
+}
+
+    foreach($array["data"] as $row)
+    {
+     $client_id=DB::table("order_items")->insert([
+            "client_id" =>$row["client_id"],
+            "order_id" =>$order_id,
+            "item_id" =>$row["item_id"],
+            "item_name" =>$row["item_name"],
+            "item_qty" =>$row["item_qty"],
+            "item_price" =>$row["item_price"],
+            "total" =>$row["item_price"]*$row["item_qty"],
+            "seller" =>$row["seller"]
+        ]);
+
+    }
+
+   $totals= DB::table("order_items")->select("total")->where("order_id",$order_id)->get();
+             $sum=0;
+   foreach ($totals as $total) {
+
+   $sum=$sum+$total->total;
+
+   }
+    foreach($array["data"] as $row)
+    {
+        DB::table("orders")->insert([
+            "client_id" =>$row["client_id"],
+            "client_mobile" =>$row["client_mobile"],
+            "order_id" =>$order_id,
+            "items_c" =>$row["item_qty"],
+            "total" =>$row["item_price"]*$row["item_qty"],
+            "is_voucher" =>$row["is_voucher"],
+            "voucher_id" =>$row["voucher_id"],
+            "voucher_value" =>$row["voucher_value"],
+            "shipping_value" =>$row["shipping_value"],
+            "voucher_value" =>$row["voucher_value"],
+            "payment_method" =>$row["payment_method"],
+            "payment_type" =>$row["payment_type"],
+            "ins_months" =>$row["ins_months"],
+            "type" =>$row["type"],
+            "status" =>$row["status"],
+            "order_integration" =>$row["order_integration"],
+            "mobile_wallet" =>$row["mobile_wallet"],
+            "date" =>$row["date"],
+            "time" =>$row["time"],
+
+        ]);
+
+    }
+// dd($order_id);
+    DB::table("order_addres_info")->insert([
+    'order_id'=>$order_id,
+    'client_id'=>$client_id,
+    'first_name'=>$client->name,
+    'last_name'=>$client->l_name,
+    'city'=>$client->city,
+    'zone'=>$client->zone,
+    'address'=>$client->address,
+    'mail'=>$client->email,
+    'mobile'=>$client->mobile,
+    'notes'=>"test",
+
+    ]);
+
+
+
+$data["msg"]=["inserted"];
+return Response::json("$",200);
+
+
+
+
+}
 
 
 public function search_items(Request $request)
