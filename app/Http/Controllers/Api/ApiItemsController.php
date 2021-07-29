@@ -26,101 +26,158 @@ use Illuminate\Support\Str;
 
 class ApiItemsController extends Controller
 {
+    public function __construct()
+    {
+        // Middleware only applied to these methods
+        $this->middleware('IsLogin')->only([
+            'add_order' // Could add bunch of more methods too
+        ]);
+    }
+   public function get_stock($id)
+   {
 
+    $data["stock"]= DB::table('items')->select("stock")->where("id",$id)->first();
 
+       return $data;
+   }
 public function add_order(Request $request)
 {
-    // dd($request->all()["client_id"]);
 
-$array = $request->all();
-$client_id=$array["data"][0]["client_id"];
-$order_id=$array["data"][0]["order_id"];
+    $array = $request->all();
+    $all_items=array();
 
-$client=DB::table("web_users")->where("id",$client_id)->first();
+    $array = $request->all();
+    $request_items=$array["data"];
+    $payment_method=0;       //get the id of order
+    $voucher_id=$array["data"][0]["voucher_id"];       //get the id of order
+    $voucher_value=$array["data"][0]["voucher_value"];       //get the id of order
+    $shipping_value=0;       //get the id of order
 
-$order_id = mt_rand(10000,100000);
 
-$client_id=DB::table("order_items")->select('order_id')->where('order_id',$order_id)->count();
-
-
-if($client_id!==0)
-{
+    // set the order id
     $order_id = mt_rand(10000,100000);
-}
 
-    foreach($array["data"] as $row)
-    {
-     $client_id=DB::table("order_items")->insert([
-            "client_id" =>$row["client_id"],
-            "order_id" =>$order_id,
-            "item_id" =>$row["item_id"],
-            "item_name" =>$row["item_name"],
-            "item_qty" =>$row["item_qty"],
-            "item_price" =>$row["item_price"],
-            "total" =>$row["item_price"]*$row["item_qty"],
-            "seller" =>$row["seller"]
-        ]);
+      $unique_order_id=DB::table("order_items")->select('order_id')->where('order_id',$order_id)->count();
+           if($unique_order_id!==0)
+               {
+               $order_id = mt_rand(10000,100000);
+         }
 
+// set the user into
+$client_id=$array["data"][0]["client_id"];
+$client=DB::table("web_users")->where("id",$client_id)->first();
+    $total_qty=0;
+    $total_total=0;
+// default values in orders table
+// $client=DB::table("web_users")->where("id", $client_id)->first();
+
+DB::table("orders")->insert([
+  "client_id" =>$client_id,
+  "client_mobile" =>$client->mobile,
+  "order_id" =>0,
+  "items_c" =>0,
+  "total" =>0,
+  "is_voucher" =>0,
+  "voucher_id" =>0,
+  "voucher_value" =>0,
+  "shipping_value" =>0,
+  "voucher_value" =>0,
+  "payment_method" =>0,
+  "payment_type" =>0,
+  "ins_months" =>0,
+  "type" =>0,
+  "status" =>0,
+  "order_integration" =>0,
+  "mobile_wallet" =>0,
+  "date" =>date('Y-m-d H:i:s'),
+  "time" =>date('Y-m-d H:i:s'),
+
+]);
+// check the items in the stock
+// insert items into orser_items table
+    foreach ($request_items as $reqest_item) {
+            $request_count=$reqest_item["item_qty"];
+            $request_id=$reqest_item["item_id"];
+            $item=DB::table('items')->where('id',$request_id)->where("published",1)->first();
+             if($item->stock >=$request_count)
+                        {
+                    $total=$reqest_item["item_price"]*$reqest_item["item_qty"];
+                    $request_count=$reqest_item["item_qty"];
+                           DB::table("order_items")->insert([
+                                "client_id" =>$reqest_item["client_id"],
+                                "order_id" =>$order_id,
+                                "item_id" =>$reqest_item["item_id"],
+                                "item_name" =>$reqest_item["item_name"],
+                                "item_qty" =>$reqest_item["item_qty"],
+                                "item_price" =>$reqest_item["item_price"],
+                                "total" =>$total,
+                                "seller" =>$reqest_item["seller"]
+                            ]);
+                            $total_qty+=$request_count;
+                          $total_total+=$total;
+
+                        }
+      }
+    /////////////////////////////////////////////   check the voucher
+      $is_voucher=$array["data"][0]["is_voucher"];
+      $voucher_name=$array["data"][0]["v_name"];
+      $user_id=$array["data"][0]["client_id"];
+      if($is_voucher==1)
+      {
+          $all_vouchers=DB::table("coupon")->select("*")->where("user",$user_id)->where('v_name',$voucher_name)->get();
+          $sum_all_all_vouchers=0;
+          foreach ($all_vouchers as $voucher_sums) {
+              $sum_all_all_vouchers+=$voucher_sums->amount;
+      }
+    }else {
+        $sum_all_all_vouchers=0;
     }
-
-   $totals= DB::table("order_items")->select("total")->where("order_id",$order_id)->get();
-             $sum=0;
-   foreach ($totals as $total) {
-
-   $sum=$sum+$total->total;
-
-   }
-    foreach($array["data"] as $row)
-    {
-        DB::table("orders")->insert([
-            "client_id" =>$row["client_id"],
-            "client_mobile" =>$row["client_mobile"],
-            "order_id" =>$order_id,
-            "items_c" =>$row["item_qty"],
-            "total" =>$row["item_price"]*$row["item_qty"],
-            "is_voucher" =>$row["is_voucher"],
-            "voucher_id" =>$row["voucher_id"],
-            "voucher_value" =>$row["voucher_value"],
-            "shipping_value" =>$row["shipping_value"],
-            "voucher_value" =>$row["voucher_value"],
-            "payment_method" =>$row["payment_method"],
-            "payment_type" =>$row["payment_type"],
-            "ins_months" =>$row["ins_months"],
-            "type" =>$row["type"],
-            "status" =>$row["status"],
-            "order_integration" =>$row["order_integration"],
-            "mobile_wallet" =>$row["mobile_wallet"],
-            "date" =>$row["date"],
-            "time" =>$row["time"],
-
-        ]);
-
-    }
-// dd($order_id);
-    DB::table("order_addres_info")->insert([
-    'order_id'=>$order_id,
-    'client_id'=>$client_id,
-    'first_name'=>$client->name,
-    'last_name'=>$client->l_name,
-    'city'=>$client->city,
-    'zone'=>$client->zone,
-    'address'=>$client->address,
-    'mail'=>$client->email,
-    'mobile'=>$client->mobile,
-    'notes'=>"test",
+///////////////////// insert into order table
+     $client=DB::table("web_users")->where("id", $client_id)->first();
+      DB::table("orders")->update([
+        "client_id" =>$client_id,
+        "client_mobile" =>$client->mobile,
+        "order_id" =>$order_id,
+        "items_c" =>$total_qty,
+        "total" =>$total_total,
+        "is_voucher" =>$is_voucher,
+        "voucher_id" =>$voucher_id,
+        "voucher_value" =>$voucher_value,
+        "shipping_value" =>$shipping_value,
+        "voucher_value" =>$voucher_value,
+        "payment_method" =>0,
+        "payment_type" =>0,
+        "ins_months" =>0,
+        "type" =>0,
+        "status" =>0,
+        "order_integration" =>0,
+        "mobile_wallet" =>0,
+        "date" =>date('Y-m-d H:i:s'),
+        "time" =>date('Y-m-d H:i:s'),
 
     ]);
 
+// insert into order_addres_info table
+DB::table("order_addres_info")->insert([
+'order_id'=>$order_id,
+'client_id'=>$client_id,
+'first_name'=>$client->name,
+'last_name'=>$client->l_name,
+'city'=>$client->city,
+'zone'=>$client->zone,
+'address'=>$client->address,
+'mail'=>$client->email,
+'mobile'=>$client->mobile,
+'notes'=>"test",
+
+]);
 
 
-$data["msg"]=["inserted"];
-return Response::json("$",200);
 
 
-
-
+$data["msg"]=["order register seccufelly"];
+return Response::json($data,200);
 }
-
 
 public function search_items(Request $request)
 {

@@ -60,4 +60,7 @@ Route::get('product_details/{id}',[ApiItemsController::class,'Product_details'])
 Route::post('search_items',[ApiItemsController::class,'search_items']);
 
 
-Route::post('add_order',[ApiItemsController::class,'add_order']);
+Route::post('add_order',[ApiItemsController::class,'add_order'])->middleware('IsLogin');
+
+
+Route::get('product_stock/{id}',[ApiItemsController::class,'get_stock']);

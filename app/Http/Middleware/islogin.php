@@ -6,6 +6,7 @@ use App\Models\Webuser;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\DB;
 
 class islogin
 {
@@ -19,13 +20,12 @@ class islogin
     public function handle(Request $request, Closure $next)
     {
 
+        $bearer_token = $request->bearerToken();
 
-        $header=$request->header('token');
-        if($header!=="" or $header!=="")
+        if($bearer_token!=null or $bearer_token!="")
         {
-
-           $user= Webuser::where('token',$header)->first();
-           if($user!==null)
+            $user= DB::table("web_users")->where('token',$bearer_token)->first();
+            if($user!==null)
           {
             return $next($request);
 
@@ -36,15 +36,10 @@ class islogin
 
         }else{
 
-            $data['msg']="no token";
+            $data['msg']="no token send";
         }
-
 
                   return Response::json($data);
     }
-
-
-
-
 
 }
